@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>宏 on 专注当下</title><link>https://qhdtony.github.io/tags/%E5%AE%8F/</link><description>Recent content in 宏 on 专注当下</description><generator>Hugo -- 0.148.2</generator><language>en-us</language><lastBuildDate>Sun, 17 Aug 2025 12:38:36 +0800</lastBuildDate><atom:link href="https://qhdtony.github.io/tags/%E5%AE%8F/index.xml" rel="self" type="application/rss+xml"/><item><title>PHP Hong</title><link>https://qhdtony.github.io/posts/php-hong/</link><pubDate>Sun, 17 Aug 2025 12:38:36 +0800</pubDate><guid>https://qhdtony.github.io/posts/php-hong/</guid><description>&lt;p>在C里面，
+宏是 C 语言的 预处理器指令（#define）。
+编译前，预处理器会把宏替换成对应的代码文本。
+宏：SQUARE(x) &amp;lt;=转换成=&amp;gt; 实际： ((5)*(5))&lt;/p>
+&lt;p>我理解，就是一类方法经常用，建立的接口标准，方便外部调用.
+也可以理解为语法糖，中间层。&lt;/p>
+&lt;pre tabindex="0">&lt;code>#define PI 3.14159
+#define SQUARE(x) ((x)*(x))
+printf(&amp;#34;%f\n&amp;#34;, SQUARE(5)); // 实际展开成 ((5)*(5))
+&lt;/code>&lt;/pre>&lt;p>在PHP里面内核中的宏作用
+用来简化zval操作、隐藏结构细节。否则每次写zval都得操作内部结构，太复杂也容易出错。&lt;/p>
+&lt;p>&lt;strong>0、回顾一下zval结构(简化)。&lt;/strong>&lt;/p>
+&lt;pre tabindex="0">&lt;code>typedef struct _zval_struct {
+zend_value value; // 变量的值 (联合体)
+union {
+struct {
+ZEND_ENDIAN_LOHI_4(
+zend_uchar type, // 类型信息 IS_LONG/IS_STRING/...
+zend_uchar type_flags,
+zend_uchar const_flags,
+zend_uchar reserved
+)
+} v;
+uint32_t type_info;
+} u1;
+union {
+uint32_t next; // GC链表/HashTable索引
+uint32_t cache_slot; // opcode缓存槽
+uint32_t lineno; // 常量声明行号
+} u2;
+} zval;
+&lt;/code>&lt;/pre>&lt;pre tabindex="0">&lt;code>typedef union _zend_value {
+zend_long lval; // 整数
+double dval; // 浮点数
+zend_refcounted *counted; // 引用计数类型 (字符串、数组、对象等)
+zend_string *str; // 字符串
+zend_array *arr; // 数组
+zend_object *obj; // 对象
+zend_resource *res; // 资源
+...
+} zend_value;
+&lt;/code>&lt;/pre>&lt;p>&lt;strong>1、简化 zval操作&lt;/strong>&lt;/p></description></item></channel></rss>

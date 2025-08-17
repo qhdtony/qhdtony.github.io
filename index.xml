@@ -1,4 +1,30 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>专注当下</title><link>https://qhdtony.github.io/</link><description>Recent content on 专注当下</description><generator>Hugo -- 0.148.2</generator><language>en-us</language><lastBuildDate>Sun, 17 Aug 2025 12:38:36 +0800</lastBuildDate><atom:link href="https://qhdtony.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>PHP Hong</title><link>https://qhdtony.github.io/posts/php-hong/</link><pubDate>Sun, 17 Aug 2025 12:38:36 +0800</pubDate><guid>https://qhdtony.github.io/posts/php-hong/</guid><description>&lt;p>在C里面，
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>专注当下</title><link>https://qhdtony.github.io/</link><description>Recent content on 专注当下</description><generator>Hugo -- 0.148.2</generator><language>en-us</language><lastBuildDate>Sun, 17 Aug 2025 14:11:40 +0800</lastBuildDate><atom:link href="https://qhdtony.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Hugoguide</title><link>https://qhdtony.github.io/posts/hugoguide/</link><pubDate>Sun, 17 Aug 2025 14:11:40 +0800</pubDate><guid>https://qhdtony.github.io/posts/hugoguide/</guid><description>&lt;pre tabindex="0">&lt;code>cd ~/hugo-blog #我自己的博客本地目录
+#创建文章
+#content/posts/hello-world.md
+hugo new posts/hello-world.md
+#修改文章
+#文章头部 draft 为 true 文章会变成草稿，推到远端，会不显示。如果要发布，需要改成 false
+date = &amp;#39;2025-08-17T14:11:40+08:00&amp;#39;
+draft = false
+title = &amp;#39;Hugoguide&amp;#39;
+tags = [&amp;#34;hugo&amp;#34;, &amp;#34;标签&amp;#34;]
+#文章内容
+建议用markdown支持的编辑器
+#本地预览，
+本地预览之后，需要执行 hugo --config hugo.toml --cleanDestinationDir --minify
+不执行上一行命令，远端 xxx.github.io 可能会跳转不正常
+hugo server -D
+#上传github前的准备 这个时候就不要本地预览了，如果预览，还得执行一下生成远端文件命令
+#生成远端文件命令
+hugo --config hugo.toml --cleanDestinationDir --minify
+#进入到目录，准备推送
+cd ./public
+#推送操作
+git add|commit|push ... 等一系列命令
+-------------------------------------
+修改完 hugo.toml 后，重新执行：
+hugo --cleanDestinationDir
+&lt;/code>&lt;/pre></description></item><item><title>PHP Hong</title><link>https://qhdtony.github.io/posts/php-hong/</link><pubDate>Sun, 17 Aug 2025 12:38:36 +0800</pubDate><guid>https://qhdtony.github.io/posts/php-hong/</guid><description>&lt;p>在C里面，
 宏是 C 语言的 预处理器指令（#define）。
 编译前，预处理器会把宏替换成对应的代码文本。
 宏：SQUARE(x) &amp;lt;=转换成=&amp;gt; 实际： ((5)*(5))&lt;/p>
