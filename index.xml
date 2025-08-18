@@ -1,4 +1,41 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>专注当下</title><link>https://qhdtony.github.io/</link><description>Recent content on 专注当下</description><generator>Hugo -- 0.148.2</generator><language>en-us</language><lastBuildDate>Sun, 17 Aug 2025 14:11:40 +0800</lastBuildDate><atom:link href="https://qhdtony.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Hugoguide</title><link>https://qhdtony.github.io/posts/hugoguide/</link><pubDate>Sun, 17 Aug 2025 14:11:40 +0800</pubDate><guid>https://qhdtony.github.io/posts/hugoguide/</guid><description>&lt;pre tabindex="0">&lt;code>cd ~/hugo-blog #我自己的博客本地目录
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>专注当下</title><link>https://qhdtony.github.io/</link><description>Recent content on 专注当下</description><generator>Hugo -- 0.148.2</generator><language>en-us</language><lastBuildDate>Mon, 18 Aug 2025 18:30:44 +0800</lastBuildDate><atom:link href="https://qhdtony.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Docker Config</title><link>https://qhdtony.github.io/posts/docker-config/</link><pubDate>Mon, 18 Aug 2025 18:30:44 +0800</pubDate><guid>https://qhdtony.github.io/posts/docker-config/</guid><description>&lt;p>今天有个老项目要用到PHP7.4 环境，官方已经不建议了。
+做一个笔记总结一下遇到的坑&lt;/p>
+&lt;h6 id="零文件结构大概这样">零、文件结构大概这样：&lt;/h6>
+&lt;pre tabindex="0">&lt;code>lnmp-docker/
+├── docker-compose.yml
+├── nginx/
+│ └── default.conf
+├── php/
+│ └── Dockerfile
+└── src/
+└── index.php
+&lt;/code>&lt;/pre>&lt;h6 id="一版本过低的问题">一、版本过低的问题&lt;/h6>
+&lt;p>一直报错的是 xdebug 装不上，我就抛弃了 xdebug&lt;/p>
+&lt;p>环境比调试用得更多。&lt;/p>
+&lt;h6 id="二镜像源的问题">二、镜像源的问题&lt;/h6>
+&lt;pre tabindex="0">&lt;code>设置-docker engine
+{
+&amp;#34;builder&amp;#34;: {
+&amp;#34;gc&amp;#34;: {
+&amp;#34;defaultKeepStorage&amp;#34;: &amp;#34;20GB&amp;#34;,
+&amp;#34;enabled&amp;#34;: true
+}
+},
+&amp;#34;experimental&amp;#34;: false,
+&amp;#34;registry-mirrors&amp;#34;: [
+&amp;#34;https://docker.m.daocloud.io&amp;#34;,
+&amp;#34;https://hub-mirror.c.163.com&amp;#34;,
+&amp;#34;https://mirror.baidubce.com&amp;#34;
+]
+}
+&lt;/code>&lt;/pre>&lt;h6 id="三服务内调用的问题-redis">三、服务内调用的问题-redis&lt;/h6>
+&lt;pre tabindex="0">&lt;code>
+Fatal error: Uncaught RedisException: Connection refused in index.php: Stack trace: #0 Redis-&amp;gt;connect(&amp;#39;127.0.0.1&amp;#39;, 6379) #1 {main} thrown in /var/www/html/index.php on line 5`
+代码里把 127.0.0.1 写成 redis, 服务名称叫 lnmp-redis
+&lt;/code>&lt;/pre>&lt;h6 id="四代码同步的问题">四、代码同步的问题&lt;/h6>
+&lt;p>本地设置的目录是 src
+volumes 映射的目录是 /var/www/html
+一般改了src的文件， docker里面的映射目录会立即更新&lt;/p></description></item><item><title>Hugoguide</title><link>https://qhdtony.github.io/posts/hugoguide/</link><pubDate>Sun, 17 Aug 2025 14:11:40 +0800</pubDate><guid>https://qhdtony.github.io/posts/hugoguide/</guid><description>&lt;pre tabindex="0">&lt;code>cd ~/hugo-blog #我自己的博客本地目录
 #创建文章
 #content/posts/hello-world.md
 hugo new posts/hello-world.md
