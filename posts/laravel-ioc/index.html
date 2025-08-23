@@ -1,0 +1,325 @@
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Laravel Ioc | 专注当下</title><meta name=keywords content="laravel,ioc,di,控制反转"><meta name=description content='一、什么是Ioc容器。
+负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。
+IoC 容器的作用
+1. 解耦
+    * 类不再自己去实例化依赖，而是通过容器自动注入。
+    * 方便替换实现（如接口绑定不同的实现类）。
+2. 依赖管理
+    * 统一在容器中管理依赖关系，避免到处 new。
+3. 服务解析
+    * 通过容器 make() 方法即可解析并返回对象。
+
+Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过：
+1. 查看有没有绑定
+2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖
+核心文件：
+* Illuminate\Container\Container
+二、原理对比理解。
+1、普通写法
+/*
+需求：
+你想开车出门。
+你得自己造一台车（发动机、轮胎、车门都要自己组装）。
+想换车？那你又得重新造一台
+即需要动业务代码
+*/
+class Driver {
+    public function __construct() {
+        $this->car = new BMW();//每次都要改类
+    }
+
+
+    public function drive() {
+        $this->car->run();
+    }
+}
+
+(new Driver())->drive();
+
+Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。
+
+这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。
+类似于:
+class Driver {
+    public function __construct($carname) {
+        $this->car = new BMW($carname);//每次都要New
+    }
+    public function drive() {
+        $this->car->run();
+    }
+}
+(new Driver("civic"))->drive();
+
+但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。
+这里说的显示表达类似于laravel里面的：
+$this->app->bind(Car::class, Tesla::class);
+2、控制反转写法'><meta name=author content><link rel=canonical href=https://qhdtony.github.io/posts/laravel-ioc/><link crossorigin=anonymous href=/assets/css/stylesheet.8fe10233a706bc87f2e08b3cf97b8bd4c0a80f10675a143675d59212121037c0.css integrity="sha256-j+ECM6cGvIfy4Is8+XuL1MCoDxBnWhQ2ddWSEhIQN8A=" rel="preload stylesheet" as=style><link rel=icon href=https://qhdtony.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://qhdtony.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://qhdtony.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://qhdtony.github.io/apple-touch-icon.png><link rel=mask-icon href=https://qhdtony.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://qhdtony.github.io/posts/laravel-ioc/><noscript><style>#theme-toggle,.top-link{display:none}</style><style>@media(prefers-color-scheme:dark){:root{--theme:rgb(29, 30, 32);--entry:rgb(46, 46, 51);--primary:rgb(218, 218, 219);--secondary:rgb(155, 156, 157);--tertiary:rgb(65, 66, 68);--content:rgb(196, 196, 197);--code-block-bg:rgb(46, 46, 51);--code-bg:rgb(55, 56, 62);--border:rgb(51, 51, 51)}.list{background:var(--theme)}.list:not(.dark)::-webkit-scrollbar-track{background:0 0}.list:not(.dark)::-webkit-scrollbar-thumb{border-color:var(--theme)}}</style></noscript><meta property="og:url" content="https://qhdtony.github.io/posts/laravel-ioc/"><meta property="og:site_name" content="专注当下"><meta property="og:title" content="Laravel Ioc"><meta property="og:description" content='一、什么是Ioc容器。
+负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。
+IoC 容器的作用 1. 解耦 * 类不再自己去实例化依赖，而是通过容器自动注入。 * 方便替换实现（如接口绑定不同的实现类）。 2. 依赖管理 * 统一在容器中管理依赖关系，避免到处 new。 3. 服务解析 * 通过容器 make() 方法即可解析并返回对象。 Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过： 1. 查看有没有绑定 2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖 核心文件： * Illuminate\Container\Container 二、原理对比理解。
+1、普通写法
+/* 需求： 你想开车出门。 你得自己造一台车（发动机、轮胎、车门都要自己组装）。 想换车？那你又得重新造一台 即需要动业务代码 */ class Driver { public function __construct() { $this->car = new BMW();//每次都要改类 } public function drive() { $this->car->run(); } } (new Driver())->drive(); Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。 这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。 类似于: class Driver { public function __construct($carname) { $this->car = new BMW($carname);//每次都要New } public function drive() { $this->car->run(); } } (new Driver("civic"))->drive(); 但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。 这里说的显示表达类似于laravel里面的： $this->app->bind(Car::class, Tesla::class); 2、控制反转写法'><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2025-08-23T14:42:20+08:00"><meta property="article:modified_time" content="2025-08-23T14:42:20+08:00"><meta property="article:tag" content="Laravel"><meta property="article:tag" content="Ioc"><meta property="article:tag" content="Di"><meta property="article:tag" content="控制反转"><meta name=twitter:card content="summary"><meta name=twitter:title content="Laravel Ioc"><meta name=twitter:description content='一、什么是Ioc容器。
+负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。
+IoC 容器的作用
+1. 解耦
+    * 类不再自己去实例化依赖，而是通过容器自动注入。
+    * 方便替换实现（如接口绑定不同的实现类）。
+2. 依赖管理
+    * 统一在容器中管理依赖关系，避免到处 new。
+3. 服务解析
+    * 通过容器 make() 方法即可解析并返回对象。
+
+Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过：
+1. 查看有没有绑定
+2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖
+核心文件：
+* Illuminate\Container\Container
+二、原理对比理解。
+1、普通写法
+/*
+需求：
+你想开车出门。
+你得自己造一台车（发动机、轮胎、车门都要自己组装）。
+想换车？那你又得重新造一台
+即需要动业务代码
+*/
+class Driver {
+    public function __construct() {
+        $this->car = new BMW();//每次都要改类
+    }
+
+
+    public function drive() {
+        $this->car->run();
+    }
+}
+
+(new Driver())->drive();
+
+Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。
+
+这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。
+类似于:
+class Driver {
+    public function __construct($carname) {
+        $this->car = new BMW($carname);//每次都要New
+    }
+    public function drive() {
+        $this->car->run();
+    }
+}
+(new Driver("civic"))->drive();
+
+但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。
+这里说的显示表达类似于laravel里面的：
+$this->app->bind(Car::class, Tesla::class);
+2、控制反转写法'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Posts","item":"https://qhdtony.github.io/posts/"},{"@type":"ListItem","position":2,"name":"Laravel Ioc","item":"https://qhdtony.github.io/posts/laravel-ioc/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Laravel Ioc","name":"Laravel Ioc","description":"一、什么是Ioc容器。\n负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。\nIoC 容器的作用 1. 解耦 * 类不再自己去实例化依赖，而是通过容器自动注入。 * 方便替换实现（如接口绑定不同的实现类）。 2. 依赖管理 * 统一在容器中管理依赖关系，避免到处 new。 3. 服务解析 * 通过容器 make() 方法即可解析并返回对象。 Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过： 1. 查看有没有绑定 2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖 核心文件： * Illuminate\\Container\\Container 二、原理对比理解。\n1、普通写法\n/* 需求： 你想开车出门。 你得自己造一台车（发动机、轮胎、车门都要自己组装）。 想换车？那你又得重新造一台 即需要动业务代码 */ class Driver { public function __construct() { $this-\u0026gt;car = new BMW();//每次都要改类 } public function drive() { $this-\u0026gt;car-\u0026gt;run(); } } (new Driver())-\u0026gt;drive(); Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。 这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。 类似于: class Driver { public function __construct($carname) { $this-\u0026gt;car = new BMW($carname);//每次都要New } public function drive() { $this-\u0026gt;car-\u0026gt;run(); } } (new Driver(\u0026#34;civic\u0026#34;))-\u0026gt;drive(); 但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。 这里说的显示表达类似于laravel里面的： $this-\u0026gt;app-\u0026gt;bind(Car::class, Tesla::class); 2、控制反转写法\n","keywords":["laravel","ioc","di","控制反转"],"articleBody":"一、什么是Ioc容器。\n负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。\nIoC 容器的作用 1. 解耦 * 类不再自己去实例化依赖，而是通过容器自动注入。 * 方便替换实现（如接口绑定不同的实现类）。 2. 依赖管理 * 统一在容器中管理依赖关系，避免到处 new。 3. 服务解析 * 通过容器 make() 方法即可解析并返回对象。 Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过： 1. 查看有没有绑定 2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖 核心文件： * Illuminate\\Container\\Container 二、原理对比理解。\n1、普通写法\n/* 需求： 你想开车出门。 你得自己造一台车（发动机、轮胎、车门都要自己组装）。 想换车？那你又得重新造一台 即需要动业务代码 */ class Driver { public function __construct() { $this-\u003ecar = new BMW();//每次都要改类 } public function drive() { $this-\u003ecar-\u003erun(); } } (new Driver())-\u003edrive(); Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。 这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。 类似于: class Driver { public function __construct($carname) { $this-\u003ecar = new BMW($carname);//每次都要New } public function drive() { $this-\u003ecar-\u003erun(); } } (new Driver(\"civic\"))-\u003edrive(); 但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。 这里说的显示表达类似于laravel里面的： $this-\u003eapp-\u003ebind(Car::class, Tesla::class); 2、控制反转写法\n\u003c?php //需求：我要一辆车，啥牌子无所谓，能跑就行。 //你只负责开车，不关心车是怎么造出来的。 //切换实现的时候，只改 绑定关系，不用动业务代码。 Interface Car { Public function run(); } Class CT5 implements Car { Public function run() { echo \"CT5 run\"; } } Class Accord implements Car { Public function run() { echo \"Honda run\"; } } Class Driver { Protected $car; Public function __construct(Car $car) { $this-\u003ecar = $car; } Public function drive() { $this-\u003ecar-\u003erun(); } } (new Driver(new CT5()))-\u003edrive();//这样写会很复杂。 替换成类似 $this-\u003eapp-\u003ebind(Car::class,CT5::class); laravel的写法 就比较清晰。 三、Laravel 中 怎么用\n1、绑定和解析\nuse App\\Services\\UserService; use App\\Services\\Contracts\\UserServiceInterface; // 在服务提供者中绑定（AppServiceProvider 或自定义） $this-\u003eapp-\u003ebind(UserServiceInterface::class, UserService::class); // 在控制器或其他地方解析 $userService = app(UserServiceInterface::class); // 或者 $userService = resolve(UserServiceInterface::class); /* bind()：每次解析返回一个新实例 singleton()：全局只会有一个实例（单例） instance()：绑定一个现成的对象 */ 2、自动依赖注入\nLaravel 容器可以自动解析构造函数依赖： class OrderController extends Controller { protected $userService; public function __construct(UserServiceInterface $userService) { $this-\u003euserService = $userService; } public function index() { return $this-\u003euserService-\u003eall(); } } OrderController 构造函数依赖了 UserServiceInterface Laravel 会自动从容器中解析绑定的实现 UserService 并注入 3、闭包绑定\n$this-\u003eapp-\u003ebind('foo', function ($app) { return new FooBar($app['config']['foo']); }); $foo = app('foo'); 这种方式适合需要运行时动态创建对象的场景。 4、上下文绑定\n在不同场景下为同一个接口提供不同实现： use App\\Services\\SmsSender; use App\\Services\\EmailSender; use App\\Contracts\\Notification; $this-\u003eapp-\u003ewhen(OrderController::class) -\u003eneeds(Notification::class) -\u003egive(SmsSender::class); $this-\u003eapp-\u003ewhen(UserController::class) -\u003eneeds(Notification::class) -\u003egive(EmailSender::class); OrderController 注入的是 SmsSender UserController 注入的是 EmailSender 5、标签\n多个类打标签，一次性解析。 $this-\u003eapp-\u003ebind('Mailer', SmtpMailer::class); $this-\u003eapp-\u003ebind('Notifier', SlackNotifier::class); $this-\u003eapp-\u003etag(['Mailer', 'Notifier'], 'messaging'); $services = $this-\u003eapp-\u003etagged('messaging'); 四、在Laravel哪里用。\n1、对外依赖接口，不依赖具体实现（面向接口编程）\n2、业务逻辑解耦，方便单元测试\n3、在 ServiceProvider 中集中绑定依赖\n4、尽量用依赖注入而不是 Facade，可测试性更强\n五、适用IoC的场景\n1. 依赖可能会替换/扩展 * 支付：支付宝 / 微信 / PayPal * 通知：短信 / 邮件 / Slack * 存储：本地 / AWS S3 / 阿里云 OSS 2. 需要写单元测试 * 测试时，可以用 IoC 注入一个假的实现（Mock），不用依赖真实服务。 * 例如：用 FakePaymentService 替换真实的支付接口。 3. 多人协作/大项目 * 不同团队负责不同模块，通过接口约定解耦，避免相互修改代码。 4. 依赖复杂，嵌套层级多 * A 依赖 B，B 依赖 C … * 用 IoC 容器时，Laravel 会自动通过反射帮你解析依赖，少写很多 new。 六、为什么用控制反转\n这是 以空间换时间 或 以复杂换灵活 的典型例子。 场景小、变化少 → 直接 new，没问题，成本低。 场景大、依赖多、可能替换实现 → IoC 就能显著降低维护成本。 举个例子： * 如果你写的是一个 小工具脚本，就 1 个类，new 绝对划算。 * 如果你写的是 电商系统： * 支付接口可能有 支付宝 / 微信 / PayPal * 发货接口可能有 顺丰 / 圆通 / 京东物流 * 通知可能有 短信 / 邮件 / Slack 👉 如果不用 IoC，你的代码里到处是 if-else 或者 switch，改一次需求要全局搜代码； 👉 用 IoC，只需要 改绑定关系，甚至可以根据配置文件或环境变量动态切换实现。 七、IoC 和 DI 的关系和区别\nIoC是一种思想，核心是“谁来负责依赖的创建”。 为什么\nDI 是一种具体实现手段，把依赖从外部传进来。 怎么做\n八、DI 常用方法\n1、构造函数注入（最常用）\nclass Driver { protected $car; // Car 由外部传入，而不是自己 new public function __construct(Car $car) { $this-\u003ecar = $car; } } 2、Setter注入\nclass Driver { protected $car; public function setCar(Car $car) { $this-\u003ecar = $car; } } 3、方法注入。\nclass Driver { public function drive(Car $car) { $car-\u003erun(); } } ","wordCount":"449","inLanguage":"en","datePublished":"2025-08-23T14:42:20+08:00","dateModified":"2025-08-23T14:42:20+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://qhdtony.github.io/posts/laravel-ioc/"},"publisher":{"@type":"Organization","name":"专注当下","logo":{"@type":"ImageObject","url":"https://qhdtony.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"?document.body.classList.add("dark"):localStorage.getItem("pref-theme")==="light"?document.body.classList.remove("dark"):window.matchMedia("(prefers-color-scheme: dark)").matches&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://qhdtony.github.io/ accesskey=h title="专注当下 (Alt + H)">专注当下</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme">
+<svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+<svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu></ul></nav></header><main class=main><article class=post-single><header class=post-header><h1 class="post-title entry-hint-parent">Laravel Ioc</h1><div class=post-meta><span title='2025-08-23 14:42:20 +0800 CST'>August 23, 2025</span></div></header><div class=post-content><p>一、什么是Ioc容器。</p><p>负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。</p><pre tabindex=0><code>IoC 容器的作用
+1. 解耦
+    * 类不再自己去实例化依赖，而是通过容器自动注入。
+    * 方便替换实现（如接口绑定不同的实现类）。
+2. 依赖管理
+    * 统一在容器中管理依赖关系，避免到处 new。
+3. 服务解析
+    * 通过容器 make() 方法即可解析并返回对象。
+
+Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过：
+1. 查看有没有绑定
+2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖
+核心文件：
+* Illuminate\Container\Container
+</code></pre><p>二、原理对比理解。</p><p>1、普通写法</p><pre tabindex=0><code>/*
+需求：
+你想开车出门。
+你得自己造一台车（发动机、轮胎、车门都要自己组装）。
+想换车？那你又得重新造一台
+即需要动业务代码
+*/
+class Driver {
+    public function __construct() {
+        $this-&gt;car = new BMW();//每次都要改类
+    }
+
+
+    public function drive() {
+        $this-&gt;car-&gt;run();
+    }
+}
+
+(new Driver())-&gt;drive();
+
+Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。
+
+这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。
+类似于:
+class Driver {
+    public function __construct($carname) {
+        $this-&gt;car = new BMW($carname);//每次都要New
+    }
+    public function drive() {
+        $this-&gt;car-&gt;run();
+    }
+}
+(new Driver(&#34;civic&#34;))-&gt;drive();
+
+但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。
+这里说的显示表达类似于laravel里面的：
+$this-&gt;app-&gt;bind(Car::class, Tesla::class);
+</code></pre><p>2、控制反转写法</p><pre tabindex=0><code>&lt;?php
+
+//需求：我要一辆车，啥牌子无所谓，能跑就行。
+//你只负责开车，不关心车是怎么造出来的。
+
+//切换实现的时候，只改 绑定关系，不用动业务代码。
+Interface Car {
+    Public function run();
+}
+
+
+Class CT5 implements Car {
+    Public function run() {
+        echo &#34;CT5 run&#34;;
+    }
+}
+
+
+Class Accord implements Car {
+    Public function run() {
+        echo &#34;Honda run&#34;;
+    }
+}
+
+
+Class Driver {
+    Protected $car;
+    Public function __construct(Car $car) {
+        $this-&gt;car = $car;
+    }
+    Public function drive() {
+        $this-&gt;car-&gt;run();
+    }
+}
+
+
+(new Driver(new CT5()))-&gt;drive();//这样写会很复杂。
+
+替换成类似 $this-&gt;app-&gt;bind(Car::class,CT5::class); laravel的写法 就比较清晰。
+</code></pre><p>三、Laravel 中 怎么用</p><p>1、绑定和解析</p><pre tabindex=0><code>use App\Services\UserService;
+use App\Services\Contracts\UserServiceInterface;
+
+
+// 在服务提供者中绑定（AppServiceProvider 或自定义）
+$this-&gt;app-&gt;bind(UserServiceInterface::class, UserService::class);
+
+
+// 在控制器或其他地方解析
+$userService = app(UserServiceInterface::class);
+// 或者
+$userService = resolve(UserServiceInterface::class);
+
+/*
+bind()：每次解析返回一个新实例
+singleton()：全局只会有一个实例（单例）
+instance()：绑定一个现成的对象
+*/
+</code></pre><p>2、自动依赖注入</p><pre tabindex=0><code>Laravel 容器可以自动解析构造函数依赖：
+class OrderController extends Controller
+{
+    protected $userService;
+
+
+    public function __construct(UserServiceInterface $userService)
+    {
+        $this-&gt;userService = $userService;
+    }
+
+
+    public function index()
+    {
+        return $this-&gt;userService-&gt;all();
+    }
+}
+
+OrderController 构造函数依赖了 UserServiceInterface
+Laravel 会自动从容器中解析绑定的实现 UserService 并注入
+</code></pre><p>3、闭包绑定</p><pre tabindex=0><code>$this-&gt;app-&gt;bind(&#39;foo&#39;, function ($app) {
+    return new FooBar($app[&#39;config&#39;][&#39;foo&#39;]);
+});
+$foo = app(&#39;foo&#39;);
+这种方式适合需要运行时动态创建对象的场景。
+</code></pre><p>4、上下文绑定</p><pre tabindex=0><code>在不同场景下为同一个接口提供不同实现：
+use App\Services\SmsSender;
+use App\Services\EmailSender;
+use App\Contracts\Notification;
+
+
+$this-&gt;app-&gt;when(OrderController::class)
+          -&gt;needs(Notification::class)
+          -&gt;give(SmsSender::class);
+
+
+$this-&gt;app-&gt;when(UserController::class)
+          -&gt;needs(Notification::class)
+          -&gt;give(EmailSender::class);
+
+OrderController 注入的是 SmsSender
+UserController 注入的是 EmailSender
+</code></pre><p>5、标签</p><pre tabindex=0><code>多个类打标签，一次性解析。
+
+$this-&gt;app-&gt;bind(&#39;Mailer&#39;, SmtpMailer::class);
+$this-&gt;app-&gt;bind(&#39;Notifier&#39;, SlackNotifier::class);
+
+$this-&gt;app-&gt;tag([&#39;Mailer&#39;, &#39;Notifier&#39;], &#39;messaging&#39;);
+
+$services = $this-&gt;app-&gt;tagged(&#39;messaging&#39;);
+</code></pre><p>四、在Laravel哪里用。</p><p>1、对外依赖接口，不依赖具体实现（面向接口编程）</p><p>2、业务逻辑解耦，方便单元测试</p><p>3、在 ServiceProvider 中集中绑定依赖</p><p>4、尽量用依赖注入而不是 Facade，可测试性更强</p><p>五、适用IoC的场景</p><pre tabindex=0><code>1. 依赖可能会替换/扩展
+    * 支付：支付宝 / 微信 / PayPal
+    * 通知：短信 / 邮件 / Slack
+    * 存储：本地 / AWS S3 / 阿里云 OSS
+2. 需要写单元测试
+    * 测试时，可以用 IoC 注入一个假的实现（Mock），不用依赖真实服务。
+    * 例如：用 FakePaymentService 替换真实的支付接口。
+3. 多人协作/大项目
+    * 不同团队负责不同模块，通过接口约定解耦，避免相互修改代码。
+4. 依赖复杂，嵌套层级多
+    * A 依赖 B，B 依赖 C …
+    * 用 IoC 容器时，Laravel 会自动通过反射帮你解析依赖，少写很多 new。
+</code></pre><p>六、为什么用控制反转</p><pre tabindex=0><code>这是 以空间换时间 或 以复杂换灵活 的典型例子。
+
+场景小、变化少 → 直接 new，没问题，成本低。
+场景大、依赖多、可能替换实现 → IoC 就能显著降低维护成本。
+
+举个例子：
+* 如果你写的是一个 小工具脚本，就 1 个类，new 绝对划算。
+* 如果你写的是 电商系统：
+    * 支付接口可能有 支付宝 / 微信 / PayPal
+    * 发货接口可能有 顺丰 / 圆通 / 京东物流
+    * 通知可能有 短信 / 邮件 / Slack
+
+👉 如果不用 IoC，你的代码里到处是 if-else 或者 switch，改一次需求要全局搜代码；
+👉 用 IoC，只需要 改绑定关系，甚至可以根据配置文件或环境变量动态切换实现。
+</code></pre><p>七、IoC 和 DI 的关系和区别</p><p>IoC是一种思想，核心是“谁来负责依赖的创建”。 为什么</p><p>DI 是一种具体实现手段，把依赖从外部传进来。 怎么做</p><p>八、DI 常用方法</p><p>1、构造函数注入（最常用）</p><pre tabindex=0><code>class Driver {
+    protected $car;
+
+
+    // Car 由外部传入，而不是自己 new
+    public function __construct(Car $car) {
+        $this-&gt;car = $car;
+    }
+}
+</code></pre><p>2、Setter注入</p><pre tabindex=0><code>class Driver {
+    protected $car;
+    public function setCar(Car $car) {
+        $this-&gt;car = $car;
+    }
+}
+</code></pre><p>3、方法注入。</p><pre tabindex=0><code>class Driver {
+    public function drive(Car $car) {
+        $car-&gt;run();
+    }
+}
+</code></pre></div><footer class=post-footer><ul class=post-tags><li><a href=https://qhdtony.github.io/tags/laravel/>Laravel</a></li><li><a href=https://qhdtony.github.io/tags/ioc/>Ioc</a></li><li><a href=https://qhdtony.github.io/tags/di/>Di</a></li><li><a href=https://qhdtony.github.io/tags/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/>控制反转</a></li></ul></footer></article></main><footer class=footer><span>&copy; 2025 <a href=https://qhdtony.github.io/>专注当下</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+<a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentColor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>

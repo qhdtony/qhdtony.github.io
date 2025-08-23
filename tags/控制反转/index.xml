@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>控制反转 on 专注当下</title><link>https://qhdtony.github.io/tags/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/</link><description>Recent content in 控制反转 on 专注当下</description><generator>Hugo -- 0.148.2</generator><language>en-us</language><lastBuildDate>Sat, 23 Aug 2025 14:42:20 +0800</lastBuildDate><atom:link href="https://qhdtony.github.io/tags/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/index.xml" rel="self" type="application/rss+xml"/><item><title>Laravel Ioc</title><link>https://qhdtony.github.io/posts/laravel-ioc/</link><pubDate>Sat, 23 Aug 2025 14:42:20 +0800</pubDate><guid>https://qhdtony.github.io/posts/laravel-ioc/</guid><description>&lt;p>一、什么是Ioc容器。&lt;/p>
+&lt;p>负责对象的创建和依赖管理，在这个容器里，不需要手动处理类之间的依赖关系。&lt;/p>
+&lt;pre tabindex="0">&lt;code>IoC 容器的作用
+1. 解耦
+* 类不再自己去实例化依赖，而是通过容器自动注入。
+* 方便替换实现（如接口绑定不同的实现类）。
+2. 依赖管理
+* 统一在容器中管理依赖关系，避免到处 new。
+3. 服务解析
+* 通过容器 make() 方法即可解析并返回对象。
+Laravel IoC 容器本质上就是一个 依赖管理器，它维护一个 绑定表（bindings）和一个 实例表（instances），解析时通过：
+1. 查看有没有绑定
+2. 如果没有绑定，就通过 反射机制 自动实例化对象，并递归解析其依赖
+核心文件：
+* Illuminate\Container\Container
+&lt;/code>&lt;/pre>&lt;p>二、原理对比理解。&lt;/p>
+&lt;p>1、普通写法&lt;/p>
+&lt;pre tabindex="0">&lt;code>/*
+需求：
+你想开车出门。
+你得自己造一台车（发动机、轮胎、车门都要自己组装）。
+想换车？那你又得重新造一台
+即需要动业务代码
+*/
+class Driver {
+public function __construct() {
+$this-&amp;gt;car = new BMW();//每次都要改类
+}
+public function drive() {
+$this-&amp;gt;car-&amp;gt;run();
+}
+}
+(new Driver())-&amp;gt;drive();
+Driver 固定绑定 了 BMW，想换成 Tesla 必须改源码。
+这样写也是可以的，为了创建灵活的环境，可以直接在Driver::__construct()的构造函数里添加字符参数。
+类似于:
+class Driver {
+public function __construct($carname) {
+$this-&amp;gt;car = new BMW($carname);//每次都要New
+}
+public function drive() {
+$this-&amp;gt;car-&amp;gt;run();
+}
+}
+(new Driver(&amp;#34;civic&amp;#34;))-&amp;gt;drive();
+但是框架不会这样简单考虑，因为一个字符串还要去维护（例如放到数组里），没有显示表达出来。
+这里说的显示表达类似于laravel里面的：
+$this-&amp;gt;app-&amp;gt;bind(Car::class, Tesla::class);
+&lt;/code>&lt;/pre>&lt;p>2、控制反转写法&lt;/p></description></item></channel></rss>
